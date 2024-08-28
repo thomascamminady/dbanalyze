@@ -13,7 +13,9 @@ def prepare_table(df):
             subtitle=f"""Last updated: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}""",
         )
         .tab_stub(rowname_col="date", groupname_col="year_week")
-        .tab_spanner(label="Elevation", columns=["elevationLoss", "elevationGain"])
+        .tab_spanner(
+            label="Elevation", columns=["elevationLoss", "elevationGain"]
+        )
         .tab_spanner(label="Heart Rate", columns=["averageHR", "maxHR"])
         .tab_spanner(
             label="Training Effect",
@@ -29,11 +31,16 @@ def prepare_table(df):
             label="Temperature",
             columns=["minTemperature", "averageTemperature", "maxTemperature"],
         )
-        .tab_spanner(label="Cadence", columns=["averageRunCadence", "maxRunCadence"])
         .tab_spanner(
-            label="Pace", columns=["average_moving_pace", "average_moving_pace_numeric"]
+            label="Cadence", columns=["averageRunCadence", "maxRunCadence"]
         )
-        .fmt_number(columns="distance", compact=True, pattern="{x} km", n_sigfig=3)
+        .tab_spanner(
+            label="Pace",
+            columns=["average_moving_pace", "average_moving_pace_numeric"],
+        )
+        .fmt_number(
+            columns="distance", compact=True, pattern="{x} km", n_sigfig=3
+        )
         .fmt_number(
             columns=[
                 "averageTemperature",
@@ -49,12 +56,17 @@ def prepare_table(df):
             n_sigfig=2,
         )
         .fmt_number(
-            columns=["activityTrainingLoad"], compact=True, pattern="{x}", n_sigfig=3
+            columns=["activityTrainingLoad"],
+            compact=True,
+            pattern="{x}",
+            n_sigfig=3,
         )
         .fmt_number(
             columns="averageRunCadence", compact=True, pattern="{x}", n_sigfig=3
         )
-        .fmt_number(columns="maxRunCadence", compact=True, pattern="{x}", n_sigfig=3)
+        .fmt_number(
+            columns="maxRunCadence", compact=True, pattern="{x}", n_sigfig=3
+        )
         .fmt_date(columns="date", date_style="day_m")
         .fmt_time(columns="time", time_style="h_m_p")
         .data_color(
@@ -73,6 +85,12 @@ def prepare_table(df):
             columns=["average_moving_pace_numeric"],
             palette=["white", "gold"],
             domain=[6.5, 3.5],
+            na_color="white",
+        )
+        .data_color(
+            columns=["activityTrainingLoad"],
+            palette=["white", "blue"],
+            domain=[0, 400],
             na_color="white",
         )
         .data_color(
@@ -111,6 +129,7 @@ def prepare_table(df):
             averageHR="Average",
             maxHR="Max",
             activityName="Activity",
+            typeKey="Type",
         )
         .cols_align("left")
         .cols_align("left", columns="activityName")
@@ -126,13 +145,37 @@ def prepare_table(df):
             stub_border_color="#eeeeee",
         )
         .tab_style(
-            [style.fill(color="#eeeeee"), style.text(weight="bold", color="black")],
+            [
+                style.fill(color="#eeeeee"),
+                style.text(weight="bold", color="black"),
+            ],
             loc.body(
                 columns=cs.all(),
                 rows=(
                     (pl.col("date") == pl.col("date").first().over("year_week"))
                     & (pl.col("time").is_null())
                 ),
+            ),
+        )
+        .tab_style(
+            [style.fill(color="#dcfcfc")],
+            loc.body(
+                columns=pl.col("activityName", "typeKey"),
+                rows=(pl.col("typeKey") == "Hiking"),
+            ),
+        )
+        .tab_style(
+            [style.fill(color="#fcdcfc")],
+            loc.body(
+                columns=pl.col("activityName", "typeKey"),
+                rows=(pl.col("typeKey") == "Track Run"),
+            ),
+        )
+        .tab_style(
+            [style.fill(color="#fcfcdc")],
+            loc.body(
+                columns=pl.col("activityName", "typeKey"),
+                rows=(pl.col("typeKey") == "Cycling"),
             ),
         )
         # .tab_style(

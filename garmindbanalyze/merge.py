@@ -26,4 +26,3 @@ copy (
 
 # Execute the SQL command to merge and write the summary file
 con.execute(sql)
-

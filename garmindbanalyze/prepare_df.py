@@ -59,15 +59,18 @@ def prepare_df(file: str, head: int | None = None) -> pl.DataFrame:
         )
         .with_columns(pl.col("distance") / 1_000)
         .with_columns(
-            average_moving_pace_sec=pl.col("movingDuration") / pl.col("distance")
+            average_moving_pace_sec=pl.col("movingDuration")
+            / pl.col("distance")
         )
-        .with_columns(max_pace=1000 / pl.col("maxSpeed"))  # speed is Meters / Second
+        .with_columns(
+            max_pace=1000 / pl.col("maxSpeed")
+        )  # speed is Meters / Second
         .fill_null(0.0)
         .fill_nan(0.0)
         .with_columns(
-            average_moving_pace_numeric=pl.col("average_moving_pace_sec").map_elements(
-                cast_to_pace_numeric, return_dtype=pl.Float64
-            ),
+            average_moving_pace_numeric=pl.col(
+                "average_moving_pace_sec"
+            ).map_elements(cast_to_pace_numeric, return_dtype=pl.Float64),
             max_pace_numeric=pl.col("max_pace").map_elements(
                 cast_to_pace_numeric, return_dtype=pl.Float64
             ),
@@ -85,7 +88,9 @@ def prepare_df(file: str, head: int | None = None) -> pl.DataFrame:
             )
         )
         .with_columns(
-            pl.col("trainingEffectLabel").str.replace_all("_", " ").str.to_titlecase()
+            pl.col("trainingEffectLabel")
+            .str.replace_all("_", " ")
+            .str.to_titlecase()
         )
         .with_columns(pl.col("activityName").str.replace(" Running", ""))
         .with_columns(pl.col("activityName").str.replace_all("ö", "oe"))
@@ -110,47 +115,59 @@ def prepare_df(file: str, head: int | None = None) -> pl.DataFrame:
     if head is not None:
         df = df.head(head)
 
-    df = pl.concat(
-        [
-            df.group_by("year_week", maintain_order=True).agg(
-                pl.sum(
-                    "distance",
-                    "elevationLoss",
-                    "elevationGain",
-                    "trainingEffect",
-                    "anaerobicTrainingEffect",
-                    "activityTrainingLoad",
-                    "calories",
-                ).round(1),
-                pl.col("date").max(),
-            ),
-            df,
-        ],
-        how="diagonal_relaxed",
-    ).select(
-        "year_week",
-        "day_of_week",
-        "activityName",
-        "time",
-        "date",
-        "distance",
-        "movingDuration",
-        "average_moving_pace",
-        "average_moving_pace_numeric",
-        "averageRunCadence",
-        "maxRunCadence",
-        "trainingEffectLabel",
-        "trainingEffect",
-        "anaerobicTrainingEffect",
-        "activityTrainingLoad",
-        "directWorkoutRpe",
-        "elevationGain",
-        "elevationLoss",
-        "averageHR",
-        "maxHR",
-        "minTemperature",
-        "averageTemperature",
-        "maxTemperature",
-        "calories",
+    df = (
+        pl.concat(
+            [
+                df.filter(pl.col("typeKey").is_in(["running", "track_running"]))
+                .group_by("year_week", maintain_order=True)
+                .agg(
+                    pl.sum(
+                        "distance",
+                        "elevationLoss",
+                        "elevationGain",
+                        "trainingEffect",
+                        "anaerobicTrainingEffect",
+                        "activityTrainingLoad",
+                        "calories",
+                    ).round(1),
+                    pl.col("date").max(),
+                ),
+                df,
+            ],
+            how="diagonal_relaxed",
+        )
+        .with_columns(
+            pl.col("typeKey")
+            .str.replace("running", "run")
+            .str.replace("_", " ")
+            .str.to_titlecase()
+        )
+        .select(
+            "year_week",
+            "day_of_week",
+            "typeKey",
+            "activityName",
+            "time",
+            "date",
+            "distance",
+            "movingDuration",
+            "average_moving_pace",
+            "average_moving_pace_numeric",
+            "averageRunCadence",
+            "maxRunCadence",
+            "trainingEffectLabel",
+            "trainingEffect",
+            "anaerobicTrainingEffect",
+            "activityTrainingLoad",
+            "directWorkoutRpe",
+            "elevationGain",
+            "elevationLoss",
+            "averageHR",
+            "maxHR",
+            "minTemperature",
+            "averageTemperature",
+            "maxTemperature",
+            "calories",
+        )
     )
     return df
