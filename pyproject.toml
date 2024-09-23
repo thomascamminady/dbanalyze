@@ -22,7 +22,7 @@ fit2parquets = "^0.2.0"
 
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.5.7"
+ruff = "^0.6.7"
 mypy = "^1.10.1"
 isort = "^5.13.2"
 pyclean = "^3.0.0"
