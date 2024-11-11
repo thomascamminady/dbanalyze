@@ -18,7 +18,7 @@ great-tables = "^0.10.0"
 pandas = "^2.2.2"
 numpy = "^2.1.0"
 garmindb = "^3.6.0"
-fit2parquets = "^0.2.0"
+fit2parquets = "^0.7.0"
 
 
 [tool.poetry.group.dev.dependencies]
